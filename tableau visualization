@@ -1,0 +1,43 @@
+--- Showcasing countries with highest percent of whole population infected by Covid19
+
+SELECT location, population, MAX(total_cases) as Highest_Infection_Count, MAX((total_cases/population))*100 as Percent_of_Population_Infected
+FROM CovidDeaths
+WHERE continent is not null and continent = 'Europe'
+GROUP BY location, population
+ORDER BY Highest_Infection_Count DESC
+
+
+--- Calculating COVID-19 lethality
+
+SELECT location, MAX(total_deaths) as Total_Death_Count, MAX(total_cases) as Total_Cases_Count, (MAX(total_deaths)/MAX(total_cases))*100 as Death_Percentage
+FROM CovidDeaths
+WHERE continent is not null and continent = 'Europe'
+GROUP BY location
+ORDER BY Death_Percentage DESC
+
+
+--- Looking at growth of vaccinated people
+
+
+SELECT cd.continent, 
+	cd.location, 
+	cd.date, 
+	cd.population, 
+	cv.new_vaccinations, 
+	SUM(cv.new_vaccinations) OVER (Partition by cd.location order by cd.location, cd.date) as Rolling_people_vaccinated
+FROM CovidDeaths cd
+JOIN CovidVaccinations cv
+	ON cd.location = cv.location
+		AND cd.date = cv.date
+WHERE cd.continent = 'Europe'
+ORDER BY cd.continent, cd.location, cd.date
+
+
+
+--- Number of tests and vaccinations
+
+
+SELECT location, SUM(new_tests) as Tests_done, MAX(total_vaccinations) as Vaccinations_done
+FROM dbo.CovidVaccinations
+WHERE continent is not null AND new_tests is not null AND total_vaccinations is not null and continent = 'Europe'
+GROUP BY location
